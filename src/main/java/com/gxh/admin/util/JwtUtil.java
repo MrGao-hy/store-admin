@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class JwtUtil {
@@ -13,10 +14,10 @@ public class JwtUtil {
     private static final String SECRET_KEY = "store-admin-secret-key-2026";
     private static final long EXPIRATION_TIME = 60 * 60 * 1000 * 24;
 
-    public static String generateToken(String userId, String roleId) {
+    public static String generateToken(String userId, List<String> roleCodes) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("roleId", roleId);
+        claims.put("roleCodes", roleCodes);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -46,5 +47,11 @@ public class JwtUtil {
     public static String getUserIdFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("userId", String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<String> getRoleCodesFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("roleCodes", List.class);
     }
 }

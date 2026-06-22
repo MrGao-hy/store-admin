@@ -1,13 +1,21 @@
 package com.gxh.admin.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.LoginRequest;
+import com.gxh.admin.system.dto.UserQueryDTO;
+import com.gxh.admin.system.dto.UserStatusDTO;
+import com.gxh.admin.system.entity.Role;
 import com.gxh.admin.system.entity.User;
 import com.gxh.admin.system.entity.UserRole;
+import com.gxh.admin.system.mapper.RoleMapper;
 import com.gxh.admin.system.mapper.UserMapper;
 import com.gxh.admin.system.mapper.UserRoleMapper;
+import com.gxh.admin.system.service.IUserRoleService;
 import com.gxh.admin.system.service.IUserService;
 import com.gxh.admin.util.JwtUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,10 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -34,7 +48,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private UserRoleServiceImpl userRoleService;
+    private UserRoleMapper userRoleMapper;
+    @Autowired
+    private RoleMapper roleMapper;
+    @Autowired
+    private IUserRoleService userRoleService;
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -43,7 +61,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
         wrapper.eq(User::getUsername, user.getUsername());
         boolean exists = userMapper.selectCount(wrapper) > 0;
-        if(exists) return Result.fail("用户已存在");
+        if (exists)
+            return Result.fail("用户已存在");
 
         String salt = UUID.randomUUID().toString().toUpperCase();
         String md5Password = getMd5Password(user.getPassword(), salt);
@@ -54,25 +73,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         UserRole userRole = new UserRole();
         userRole.setUserId(user.getId());
         userRole.setRoleId("3");
-        userRoleService.bindUserRoleService(userRole);
+        userRoleMapper.insert(userRole);
 
         return Result.success("注册成功");
     }
 
     @Override
     public Result<User> loginService(LoginRequest loginRequest, HttpServletResponse response) {
-//        String captchaKey = "captcha:" + loginRequest.getUuid();
-//        String storedCaptcha = redisTemplate.opsForValue().get(captchaKey);
-//
-//        if (storedCaptcha == null) {
-//            return Result.fail("验证码已过期，请重新获取");
-//        }
-//
-//        if (!storedCaptcha.equalsIgnoreCase(loginRequest.getCode())) {
-//            return Result.fail("验证码错误");
-//        }
-
-//        redisTemplate.delete(captchaKey);
+        // 校验验证码
+        String captchaKey = "captcha:" + loginRequest.getUuid();
+        String storedCaptcha = redisTemplate.opsForValue().get(captchaKey);
+        if (storedCaptcha == null) {
+            return Result.fail("验证码已过期，请重新获取");
+        }
+        if (!storedCaptcha.equalsIgnoreCase(loginRequest.getCode())) {
+            return Result.fail("验证码错误");
+        }
+        redisTemplate.delete(captchaKey);
 
         LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
         wrapper.eq(User::getUsername, loginRequest.getUsername());
@@ -91,12 +108,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail("密码错误");
         }
 
-                // 通过中间表查询用户角色
-        LambdaQueryWrapper<UserRole> roleWrapper = Wrappers.lambdaQuery();
-        roleWrapper.eq(UserRole::getUserId, user.getId());
-        UserRole userRole = userRoleService.getOne(roleWrapper);
+        // 通过getRoleIdsByUserId查询角色ID列表
+        Result<List<String>> roleIdsResult = userRoleService.getRoleIdsByUserId(user.getId());
+        List<String> roleIds = roleIdsResult.getData();
 
-        String token = JwtUtil.generateToken(user.getId(), userRole.getRoleId());
+        // 根据角色ID列表查询角色编码
+        List<String> roleCodes = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty()) {
+            List<Role> roles = roleMapper.selectBatchIds(roleIds);
+            roleCodes = roles.stream()
+                    .map(Role::getRoleCode)
+                    .collect(Collectors.toList());
+        }
+
+        String token = JwtUtil.generateToken(user.getId(), roleCodes);
 
         // 将token存入cookie
         Cookie cookie = new Cookie("token", token);
@@ -110,14 +135,96 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public Result<User> getUserInfo(String userId) {
-        User user = userMapper.selectById(userId);
-        
+        User user = getById(userId);
+
         if (user == null) {
             return Result.fail("用户不存在");
         }
 
-
         return Result.success(user, "获取用户信息成功");
+    }
+
+    @Override
+    public Result<IPage<User>> getUserList(UserQueryDTO queryDTO, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
+
+        // 构建查询条件
+        LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
+        wrapper.like(StringUtils.hasText(queryDTO.getUsername()), User::getUsername, queryDTO.getUsername());
+        if (queryDTO.getStatus() != null) {
+            wrapper.eq(User::getStatus, queryDTO.getStatus());
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+
+        // 分页查询
+        IPage<User> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
+        IPage<User> userPage = userMapper.selectPage(page, wrapper);
+
+        // 循环用户列表，查询每个用户的角色列表
+        for (User user : userPage.getRecords()) {
+            // 调用getRoleIdsByUserId获取角色ID数组
+            Result<List<String>> roleIdsResult = userRoleService.getRoleIdsByUserId(user.getId());
+            List<String> roleIds = roleIdsResult.getData();
+
+            if (roleIds != null && !roleIds.isEmpty()) {
+                // 根据角色ID列表查询Role对象
+                List<Role> roles = roleMapper.selectBatchIds(roleIds);
+                user.setRoles(roles);
+            }
+        }
+
+        return Result.success(userPage, "获取用户列表成功");
+    }
+
+    @Override
+    public Result<String> setUserStatus(UserStatusDTO userStatusDTO, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
+        // 验证用户id是否存在
+        boolean isExist = isExistUser(userStatusDTO.getUserId());
+        if (!isExist) return Result.fail("用户不存在");
+
+        LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate();
+        wrapper.eq(User::getId, userStatusDTO.getUserId());
+        wrapper.set(User::getStatus, userStatusDTO.getStatus());
+        userMapper.update(null, wrapper);
+
+        return Result.success(userStatusDTO.getStatus() == 1 ? "启用用户成功" : "禁用用户成功");
+    }
+
+    @Override
+    public Result<String> setUserRole(UserRole userRole, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
+
+        // 验证用户id是否存在
+        boolean isExist = isExistUser(userRole.getUserId());
+        if (!isExist) return Result.fail("用户不存在");
+
+        // 绑定用户角色
+        Result<String> bindResult = userRoleService.bindUserRoleService(userRole);
+        if (bindResult.getCode() != 20000) {
+            return Result.fail(bindResult.getMessage());
+        }
+
+        return Result.success("设置用户角色成功");
+    }
+
+    public Boolean isExistUser(String id) {
+        // 验证用户是否存在
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getId, id);
+        return exists(wrapper);
     }
 
     private String getMd5Password(String password, String salt) {

@@ -16,7 +16,7 @@ public class CodeGenerator {
         String basePackage = "com.gxh.admin";
         String moduleName = "system";
         String mapperLocation = "E:\\project\\mine\\java\\store-admin\\src\\main\\resources\\mapper\\" + moduleName;
-        String tableName = "sys_user,sys_role,sys_user_role";
+        String tableName = "sys_user,sys_role,sys_user_role,sys_menu";
         String tablePrefix = "sys_";
         FastAutoGenerator.create(url, username, password)
                 .globalConfig(builder -> {

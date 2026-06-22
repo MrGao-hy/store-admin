@@ -2,7 +2,12 @@ package com.gxh.admin.system.service;
 
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.entity.UserRole;
+
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>
@@ -15,5 +20,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IUserRoleService extends IService<UserRole> {
 
     Result<String> bindUserRoleService(UserRole userRole);
+
+    Result<List<String>> getRoleIdsByUserId(String userId);
+
+    Result<Void> checkAdminPermission(HttpServletRequest request);
 
 }

@@ -1,8 +1,12 @@
 package com.gxh.admin.system.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -32,5 +36,10 @@ public class UserRole implements Serializable {
     private String roleId;
 
     @ApiModelProperty("分配时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
+
+    @ApiModelProperty("权限id集合")
+    @TableField(exist = false)
+    private String[] roleIds;
 }
