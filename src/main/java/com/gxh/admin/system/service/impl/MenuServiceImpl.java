@@ -1,11 +1,11 @@
 package com.gxh.admin.system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.entity.Menu;
 import com.gxh.admin.system.mapper.MenuMapper;
 import com.gxh.admin.system.service.IMenuService;
-import com.gxh.admin.system.vo.MenuVO;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -27,35 +27,33 @@ import java.util.stream.Collectors;
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IMenuService {
 
     @Override
-    public Result<List<MenuVO>> getMenuTree() {
+    public Result<List<Menu>> getMenuTree() {
         List<Menu> menus = list();
-        List<MenuVO> menuTree = buildMenuTree(menus);
+        List<Menu> menuTree = buildMenuTree(menus);
         return Result.success(menuTree, "获取菜单树成功");
     }
 
     @Override
-    public Result<List<MenuVO>> getMenuList() {
-        List<Menu> menus = list(
-                Wrappers.<Menu>lambdaQuery()
-                        .orderByAsc(Menu::getSort)
-        );
-        List<MenuVO> menuVOS = menus.stream().map(menu -> {
-            MenuVO vo = new MenuVO();
-            BeanUtils.copyProperties(menu, vo);
+    public Result<List<Menu>> getMenuList() {
+        LambdaQueryWrapper<Menu> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.orderByAsc(Menu::getSort);
+        List<Menu> menus = list(queryWrapper);
+        List<Menu> MenuS = menus.stream().map(menu -> {
+            Menu vo = new Menu();
+            vo.setId(menu.getId());
+            vo.setName(menu.getName());
+            vo.setParentId(menu.getParentId());
+            vo.setChildren(menu.getChildren());
+            // 不set的字段：createTime、updateTime、deleteFlag等不会赋值，前端无数据
             return vo;
         }).collect(Collectors.toList());
-        return Result.success(menuVOS, "获取菜单列表成功");
+        List<Menu> menuTree = buildMenuTree(MenuS);
+        return Result.success(menuTree);
     }
 
     @Override
     @Transactional
     public Result<Menu> addMenu(Menu menu) {
-        if (menu.getParentId() == null) {
-            menu.setParentId(0L);
-        }
-        if (menu.getSort() == null) {
-            menu.setSort(0);
-        }
         if (menu.getVisible() == null) {
             menu.setVisible((byte) 1);
         }
@@ -88,20 +86,20 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     /**
      * 构建菜单树
      */
-    private List<MenuVO> buildMenuTree(List<Menu> menus) {
-        List<MenuVO> result = new ArrayList<>();
-        List<MenuVO> allMenus = menus.stream().map(menu -> {
-            MenuVO vo = new MenuVO();
+    private List<Menu> buildMenuTree(List<Menu> menus) {
+        List<Menu> result = new ArrayList<>();
+        List<Menu> allMenus = menus.stream().map(menu -> {
+            Menu vo = new Menu();
             BeanUtils.copyProperties(menu, vo);
             return vo;
         }).collect(Collectors.toList());
 
         // 按parentId分组
-        List<MenuVO> rootMenus = allMenus.stream()
-                .filter(menu -> menu.getParentId() == 0 || menu.getParentId() == null)
+        List<Menu> rootMenus = allMenus.stream()
+                .filter(menu -> menu.getParentId().isEmpty())
                 .collect(Collectors.toList());
 
-        for (MenuVO rootMenu : rootMenus) {
+        for (Menu rootMenu : rootMenus) {
             buildChildren(rootMenu, allMenus);
             result.add(rootMenu);
         }
@@ -112,16 +110,18 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     /**
      * 递归构建子菜单
      */
-    private void buildChildren(MenuVO parentMenu, List<MenuVO> allMenus) {
-        List<MenuVO> children = allMenus.stream()
+    private void buildChildren(Menu parentMenu, List<Menu> allMenus) {
+        List<Menu> children = allMenus.stream()
                 .filter(menu -> menu.getParentId() != null && menu.getParentId().equals(parentMenu.getId()))
                 .collect(Collectors.toList());
 
-        for (MenuVO child : children) {
+        for (Menu child : children) {
             buildChildren(child, allMenus);
         }
 
-        parentMenu.setChildren(children);
+        if (!children.isEmpty()) {
+            parentMenu.setChildren(children);
+        }
     }
 
 }

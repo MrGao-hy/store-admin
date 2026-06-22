@@ -25,8 +25,8 @@ spring:
 
 # MyBatis配置
 mybatis:
-  mapper-locations: classpath:mappers/*.xml
-  type-aliases-package: com.gxh.admin.mybatis.entity
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.gxh.admin.system.entity
   configuration:
     map-underscore-to-camel-case: true # 下划线转驼峰
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql日志

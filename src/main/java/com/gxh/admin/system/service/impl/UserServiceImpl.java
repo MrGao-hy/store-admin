@@ -15,6 +15,7 @@ import com.gxh.admin.system.entity.UserRole;
 import com.gxh.admin.system.mapper.RoleMapper;
 import com.gxh.admin.system.mapper.UserMapper;
 import com.gxh.admin.system.mapper.UserRoleMapper;
+import com.gxh.admin.system.service.IRoleService;
 import com.gxh.admin.system.service.IUserRoleService;
 import com.gxh.admin.system.service.IUserService;
 import com.gxh.admin.util.JwtUtil;
@@ -53,6 +54,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private RoleMapper roleMapper;
     @Autowired
     private IUserRoleService userRoleService;
+    @Autowired
+    private IRoleService roleService;
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -126,7 +129,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 将token存入cookie
         Cookie cookie = new Cookie("token", token);
         cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60); // 24小时
+        cookie.setMaxAge(10 * 24 * 60 * 60); // 10天
         cookie.setHttpOnly(true); // 防止XSS攻击
         response.addCookie(cookie);
 
@@ -140,6 +143,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user == null) {
             return Result.fail("用户不存在");
         }
+
+        // 调用getRoleIdsByUserId获取角色ID数组
+
+        List<Role> roles =  roleService.getUserRoles(user.getId());
+        user.setRoles(roles);
 
         return Result.success(user, "获取用户信息成功");
     }
@@ -167,14 +175,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 循环用户列表，查询每个用户的角色列表
         for (User user : userPage.getRecords()) {
             // 调用getRoleIdsByUserId获取角色ID数组
-            Result<List<String>> roleIdsResult = userRoleService.getRoleIdsByUserId(user.getId());
-            List<String> roleIds = roleIdsResult.getData();
-
-            if (roleIds != null && !roleIds.isEmpty()) {
-                // 根据角色ID列表查询Role对象
-                List<Role> roles = roleMapper.selectBatchIds(roleIds);
-                user.setRoles(roles);
-            }
+            List<Role> roles =  roleService.getUserRoles(user.getId());
+            user.setRoles(roles);
         }
 
         return Result.success(userPage, "获取用户列表成功");

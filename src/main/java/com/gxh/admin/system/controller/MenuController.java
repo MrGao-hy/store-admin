@@ -3,7 +3,6 @@ package com.gxh.admin.system.controller;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.entity.Menu;
 import com.gxh.admin.system.service.IMenuService;
-import com.gxh.admin.system.vo.MenuVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,13 @@ public class MenuController {
 
     @ApiOperation("获取菜单树形结构")
     @GetMapping("tree")
-    public Result<List<MenuVO>> getMenuTree() {
+    public Result<List<Menu>> getMenuTree() {
         return menuService.getMenuTree();
     }
 
     @ApiOperation("获取菜单列表")
-    @GetMapping("list")
-    public Result<List<MenuVO>> getMenuList() {
+    @GetMapping("options")
+    public Result<List<Menu>> getMenuList() {
         return menuService.getMenuList();
     }
 

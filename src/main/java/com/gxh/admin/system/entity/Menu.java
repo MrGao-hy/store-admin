@@ -1,15 +1,18 @@
 package com.gxh.admin.system.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -22,16 +25,16 @@ import java.time.LocalDateTime;
 @Data
 @TableName("sys_menu")
 @ApiModel(value = "Menu对象", description = "系统菜单表")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Menu implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("主键ID")
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private String id;
 
     @ApiModelProperty("父菜单ID（0表示顶级菜单）")
-    private Long parentId;
+    private String parentId;
 
     @ApiModelProperty("菜单名称")
     private String name;
@@ -67,5 +70,9 @@ public class Menu implements Serializable {
     @ApiModelProperty("更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+
+    @ApiModelProperty("子菜单列表")
+    @TableField(exist = false)
+    private List<Menu> children;
 
 }
