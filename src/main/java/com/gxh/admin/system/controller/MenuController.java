@@ -37,25 +37,21 @@ public class MenuController {
     }
 
     @ApiOperation("修改菜单")
-    @PutMapping("update")
+    @PostMapping("update")
     public Result<Menu> updateMenu(@RequestBody Menu menu) {
         return menuService.updateMenu(menu);
     }
 
     @ApiOperation("删除菜单")
-    @DeleteMapping("delete/{id}")
-    public Result<Void> deleteMenu(@PathVariable Long id) {
+    @PostMapping("delete")
+    public Result<String> deleteMenu(@RequestBody String id) {
         return menuService.deleteMenu(id);
     }
 
     @ApiOperation("根据ID获取菜单")
-    @GetMapping("{id}")
-    public Result<Menu> getMenuById(@PathVariable Long id) {
-        Menu menu = menuService.getById(id);
-        if (menu != null) {
-            return Result.success(menu, "获取菜单成功");
-        }
-        return Result.fail("菜单不存在");
+    @PostMapping("detail")
+    public Result<Menu> getMenuById(@RequestBody String id) {
+        return menuService.getMenuByIdService(id);
     }
 
 }

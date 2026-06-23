@@ -9,7 +9,6 @@ import com.gxh.admin.system.service.IMenuService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +51,6 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    @Transactional
     public Result<Menu> addMenu(Menu menu) {
         if (menu.getVisible() == null) {
             menu.setVisible((byte) 1);
@@ -65,22 +63,34 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    @Transactional
     public Result<Menu> updateMenu(Menu menu) {
         updateById(menu);
         return Result.success(menu, "修改菜单成功");
     }
 
     @Override
-    @Transactional
-    public Result<Void> deleteMenu(Long id) {
+    public Result<String> deleteMenu(String id) {
         // 查询是否有子菜单
         List<Menu> children = list(Wrappers.<Menu>lambdaQuery().eq(Menu::getParentId, id));
         if (children != null && !children.isEmpty()) {
             return Result.fail("该菜单存在子菜单，请先删除子菜单");
         }
         removeById(id);
-        return Result.success(null, "删除菜单成功");
+        return Result.success("删除菜单成功");
+    }
+
+    @Override
+    public Result<Menu> getMenuByIdService(String id) {
+        try {
+            Menu menu = getById(id);
+            if (menu != null) {
+                return Result.success(menu, "获取菜单成功");
+            } else {
+                return Result.fail("菜单不存在");
+            }
+        } catch (Exception e) {
+            return Result.fail("获取菜单错误");
+        }
     }
 
     /**

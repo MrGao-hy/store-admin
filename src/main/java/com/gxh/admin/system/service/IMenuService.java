@@ -24,6 +24,8 @@ public interface IMenuService extends IService<Menu> {
 
     Result<Menu> updateMenu(Menu menu);
 
-    Result<Void> deleteMenu(Long id);
+    Result<String> deleteMenu(String id);
+
+    Result<Menu> getMenuByIdService(String id);
 
 }

@@ -169,8 +169,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         wrapper.orderByDesc(User::getCreateTime);
 
         // 分页查询
-        IPage<User> page = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
-        IPage<User> userPage = userMapper.selectPage(page, wrapper);
+        IPage<User> userList = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
+        IPage<User> userPage = page(userList, wrapper);
 
         // 循环用户列表，查询每个用户的角色列表
         for (User user : userPage.getRecords()) {
@@ -196,7 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate();
         wrapper.eq(User::getId, userStatusDTO.getUserId());
         wrapper.set(User::getStatus, userStatusDTO.getStatus());
-        userMapper.update(null, wrapper);
+        update(wrapper);
 
         return Result.success(userStatusDTO.getStatus() == 1 ? "启用用户成功" : "禁用用户成功");
     }
