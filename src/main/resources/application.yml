@@ -36,4 +36,4 @@ knife4j:
 
 logging:
   level:
-    com.example.demo: debug
+    com.gxh.admin: debug
