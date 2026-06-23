@@ -137,7 +137,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public Result<User> getUserInfo(String userId) {
+    public Result<User> getUserInfo(String userId, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
+
         User user = getById(userId);
 
         if (user == null) {

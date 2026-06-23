@@ -4,6 +4,7 @@ import com.gxh.admin.common.Result;
 import com.gxh.admin.system.entity.Menu;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -16,16 +17,16 @@ import java.util.List;
  */
 public interface IMenuService extends IService<Menu> {
 
-    Result<List<Menu>> getMenuTree();
+    Result<List<Menu>> getMenuTree(HttpServletRequest request);
 
     Result<List<Menu>> getMenuList();
 
-    Result<Menu> addMenu(Menu menu);
+    Result<Menu> addMenu(Menu menu, HttpServletRequest request);
 
-    Result<Menu> updateMenu(Menu menu);
+    Result<Menu> updateMenu(Menu menu, HttpServletRequest request);
 
-    Result<String> deleteMenu(String id);
+    Result<String> deleteMenu(String id, HttpServletRequest request);
 
-    Result<Menu> getMenuByIdService(String id);
+    Result<Menu> getMenuByIdService(String id, HttpServletRequest request);
 
 }

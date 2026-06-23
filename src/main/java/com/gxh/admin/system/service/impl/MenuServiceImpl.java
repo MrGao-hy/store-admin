@@ -7,9 +7,12 @@ import com.gxh.admin.system.entity.Menu;
 import com.gxh.admin.system.mapper.MenuMapper;
 import com.gxh.admin.system.service.IMenuService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gxh.admin.system.service.IUserRoleService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +28,16 @@ import java.util.stream.Collectors;
 @Service
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IMenuService {
 
+    @Autowired
+    private IUserRoleService userRoleService;
+
     @Override
-    public Result<List<Menu>> getMenuTree() {
+    public Result<List<Menu>> getMenuTree(HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
         List<Menu> menus = list();
         List<Menu> menuTree = buildMenuTree(menus);
         return Result.success(menuTree, "获取菜单树成功");
@@ -51,7 +62,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    public Result<Menu> addMenu(Menu menu) {
+    public Result<Menu> addMenu(Menu menu, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
         if (menu.getVisible() == null) {
             menu.setVisible((byte) 1);
         }
@@ -63,13 +79,23 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    public Result<Menu> updateMenu(Menu menu) {
+    public Result<Menu> updateMenu(Menu menu, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
         updateById(menu);
         return Result.success(menu, "修改菜单成功");
     }
 
     @Override
-    public Result<String> deleteMenu(String id) {
+    public Result<String> deleteMenu(String id, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
         // 查询是否有子菜单
         List<Menu> children = list(Wrappers.<Menu>lambdaQuery().eq(Menu::getParentId, id));
         if (children != null && !children.isEmpty()) {
@@ -80,7 +106,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    public Result<Menu> getMenuByIdService(String id) {
+    public Result<Menu> getMenuByIdService(String id, HttpServletRequest request) {
+        // 验证ADMIN权限
+        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        if (checkResult != null) {
+            return Result.fail(checkResult.getMessage());
+        }
         try {
             Menu menu = getById(id);
             if (menu != null) {

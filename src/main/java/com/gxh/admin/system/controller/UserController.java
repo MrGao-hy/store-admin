@@ -43,7 +43,7 @@ public class UserController {
         // 1. 优先取前端传入id，为空再取登录userId
         String userId = Optional.ofNullable(id)
                 .orElse((String) request.getAttribute("userId"));
-        return userService.getUserInfo(userId);
+        return userService.getUserInfo(userId, request);
     }
 
     @ApiOperation("获取用户列表")
