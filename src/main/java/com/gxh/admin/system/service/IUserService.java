@@ -34,4 +34,6 @@ public interface IUserService extends IService<User> {
 
     Result<String> setUserRole(UserRole userRole, HttpServletRequest request);
 
+    Result<IPage<User>> getShopEmployeeList(UserQueryDTO queryDTO, HttpServletRequest request);
+
 }

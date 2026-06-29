@@ -4,6 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.gxh.admin.common.jackson.BooleanToByteDeserializer;
+import com.gxh.admin.common.jackson.ByteToBooleanSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -56,9 +60,13 @@ public class Menu implements Serializable {
     private Integer sort;
 
     @ApiModelProperty("是否显示 1显示 0隐藏")
+    @JsonSerialize(using = ByteToBooleanSerializer.class)
+    @JsonDeserialize(using = BooleanToByteDeserializer.class)
     private Byte visible;
 
     @ApiModelProperty("是否缓存")
+    @JsonSerialize(using = ByteToBooleanSerializer.class)
+    @JsonDeserialize(using = BooleanToByteDeserializer.class)
     private Byte keepAlive;
 
     @ApiModelProperty("创建时间")

@@ -52,6 +52,12 @@ public class UserController {
         return userService.getUserList(queryDTO, request);
     }
 
+    @ApiOperation("获取门店员工列表")
+    @PostMapping("employee/list")
+    public Result<IPage<User>> getShopEmployeeList(@RequestBody UserQueryDTO queryDTO, HttpServletRequest request) {
+        return userService.getShopEmployeeList(queryDTO, request);
+    }
+
     @ApiOperation("设置用户状态")
     @PostMapping("update/status")
     public Result<String> setUserStatus(@RequestBody UserStatusDTO userStatusDTO, HttpServletRequest request) {

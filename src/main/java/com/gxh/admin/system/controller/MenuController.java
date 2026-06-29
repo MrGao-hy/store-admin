@@ -1,6 +1,7 @@
 package com.gxh.admin.system.controller;
 
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.IdDTO;
 import com.gxh.admin.system.entity.Menu;
 import com.gxh.admin.system.service.IMenuService;
 import io.swagger.annotations.Api;
@@ -45,14 +46,14 @@ public class MenuController {
 
     @ApiOperation("删除菜单")
     @PostMapping("delete")
-    public Result<String> deleteMenu(@RequestBody String id, HttpServletRequest request) {
-        return menuService.deleteMenu(id, request);
+    public Result<String> deleteMenu(@RequestBody IdDTO idDTO, HttpServletRequest request) {
+        return menuService.deleteMenu(idDTO, request);
     }
 
     @ApiOperation("根据ID获取菜单")
     @PostMapping("detail")
-    public Result<Menu> getMenuById(@RequestBody String id, HttpServletRequest request) {
-        return menuService.getMenuByIdService(id, request);
+    public Result<Menu> getMenuById(@RequestBody IdDTO idDTO, HttpServletRequest request) {
+        return menuService.getMenuByIdService(idDTO, request);
     }
 
 }

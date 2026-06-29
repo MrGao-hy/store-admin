@@ -1,6 +1,7 @@
 package com.gxh.admin.system.service;
 
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.IdDTO;
 import com.gxh.admin.system.entity.Menu;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -25,8 +26,8 @@ public interface IMenuService extends IService<Menu> {
 
     Result<Menu> updateMenu(Menu menu, HttpServletRequest request);
 
-    Result<String> deleteMenu(String id, HttpServletRequest request);
+    Result<String> deleteMenu(IdDTO idDTO, HttpServletRequest request);
 
-    Result<Menu> getMenuByIdService(String id, HttpServletRequest request);
+    Result<Menu> getMenuByIdService(IdDTO idDTO, HttpServletRequest request);
 
 }

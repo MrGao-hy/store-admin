@@ -3,6 +3,7 @@ package com.gxh.admin.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.IdDTO;
 import com.gxh.admin.system.entity.Menu;
 import com.gxh.admin.system.mapper.MenuMapper;
 import com.gxh.admin.system.service.IMenuService;
@@ -33,14 +34,52 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
 
     @Override
     public Result<List<Menu>> getMenuTree(HttpServletRequest request) {
-        // 验证ADMIN权限
-        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
-        if (checkResult != null) {
-            return Result.fail(checkResult.getMessage());
+        boolean isShopRole = userRoleService.hasShopRole(request);
+
+        if (!isShopRole) {
+            Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+            if (checkResult != null) {
+                return Result.fail(checkResult.getMessage());
+            }
+            List<Menu> menus = list();
+            List<Menu> menuTree = buildMenuTree(menus);
+            return Result.success(menuTree, "获取菜单树成功");
         }
-        List<Menu> menus = list();
-        List<Menu> menuTree = buildMenuTree(menus);
+
+        List<Menu> allMenus = list();
+        List<Menu> filteredMenus = filterShopMenus(allMenus);
+        List<Menu> menuTree = buildMenuTree(filteredMenus);
         return Result.success(menuTree, "获取菜单树成功");
+    }
+
+    private List<Menu> filterShopMenus(List<Menu> allMenus) {
+        java.util.Set<String> allowedMenuIds = new java.util.HashSet<>();
+
+        for (Menu menu : allMenus) {
+            String name = menu.getName();
+            if (name != null && (name.contains("员工") || name.contains("商品") || name.contains("订单"))) {
+                allowedMenuIds.add(menu.getId());
+                String parentId = menu.getParentId();
+                while (parentId != null && !parentId.isEmpty()) {
+                    boolean found = false;
+                    for (Menu m : allMenus) {
+                        if (parentId.equals(m.getId())) {
+                            allowedMenuIds.add(m.getId());
+                            parentId = m.getParentId();
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return allMenus.stream()
+                .filter(menu -> allowedMenuIds.contains(menu.getId()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -90,30 +129,30 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
     }
 
     @Override
-    public Result<String> deleteMenu(String id, HttpServletRequest request) {
+    public Result<String> deleteMenu(IdDTO idDTO, HttpServletRequest request) {
         // 验证ADMIN权限
         Result<Void> checkResult = userRoleService.checkAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
         // 查询是否有子菜单
-        List<Menu> children = list(Wrappers.<Menu>lambdaQuery().eq(Menu::getParentId, id));
+        List<Menu> children = list(Wrappers.<Menu>lambdaQuery().eq(Menu::getParentId, idDTO.getId()));
         if (children != null && !children.isEmpty()) {
             return Result.fail("该菜单存在子菜单，请先删除子菜单");
         }
-        removeById(id);
+        removeById(idDTO.getId());
         return Result.success("删除菜单成功");
     }
 
     @Override
-    public Result<Menu> getMenuByIdService(String id, HttpServletRequest request) {
+    public Result<Menu> getMenuByIdService(IdDTO idDTO, HttpServletRequest request) {
         // 验证ADMIN权限
         Result<Void> checkResult = userRoleService.checkAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
         try {
-            Menu menu = getById(id);
+            Menu menu = getById(idDTO.getId());
             if (menu != null) {
                 return Result.success(menu, "获取菜单成功");
             } else {

@@ -11,6 +11,10 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.gxh.admin.common.jackson.BooleanToByteDeserializer;
+import com.gxh.admin.common.jackson.ByteToBooleanSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -79,6 +83,8 @@ public class User implements Serializable {
     private String address;
 
     @ApiModelProperty("状态(1正常 0禁用)")
+    @JsonSerialize(using = ByteToBooleanSerializer.class)
+    @JsonDeserialize(using = BooleanToByteDeserializer.class)
     private Byte status;
 
     @ApiModelProperty("创建时间")

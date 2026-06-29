@@ -3,8 +3,11 @@ package com.gxh.admin.system.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * <p>
@@ -14,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @author gaoxianhua
  * @since 2026-06-23
  */
+@Data
 @TableName("sys_user_shop")
 @ApiModel(value = "UserShop对象", description = "用户-门店绑定表（店长、店员归属门店）")
 public class UserShop implements Serializable {
@@ -30,47 +34,6 @@ public class UserShop implements Serializable {
     private String shopId;
 
     @ApiModelProperty("绑定时间")
-    private LocalDateTime bindTime;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getShopId() {
-        return shopId;
-    }
-
-    public void setShopId(String shopId) {
-        this.shopId = shopId;
-    }
-
-    public LocalDateTime getBindTime() {
-        return bindTime;
-    }
-
-    public void setBindTime(LocalDateTime bindTime) {
-        this.bindTime = bindTime;
-    }
-
-    @Override
-    public String toString() {
-        return "UserShop{" +
-            "id = " + id +
-            ", userId = " + userId +
-            ", shopId = " + shopId +
-            ", bindTime = " + bindTime +
-        "}";
-    }
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
 }

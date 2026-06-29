@@ -3,7 +3,6 @@ package com.gxh.admin.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gxh.admin.system.entity.Role;
 import com.gxh.admin.system.mapper.RoleMapper;
-import org.springframework.util.CollectionUtils;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.entity.UserRole;
 import com.gxh.admin.system.mapper.UserRoleMapper;
@@ -11,9 +10,7 @@ import com.gxh.admin.system.service.IUserRoleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import com.gxh.admin.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,12 +106,72 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
         return null;
     }
 
-    /**
-     * 从Cookie中获取Token
-     *
-     * @param request HTTP请求
-     * @return Token字符串，不存在返回null
-     */
+    @Override
+    public Result<Void> checkShopAdminPermission(HttpServletRequest request) {
+        String token = getTokenFromCookie(request);
+        if (token == null) {
+            return Result.fail("未登录，请先登录");
+        }
+
+        if (!JwtUtil.validateToken(token)) {
+            return Result.fail("token已过期，请重新登录");
+        }
+
+        List<String> roleCodes = JwtUtil.getRoleCodesFromToken(token);
+        if (roleCodes == null || (!roleCodes.contains("ADMIN") && !roleCodes.contains("SHOP_ADMIN"))) {
+            return Result.fail("权限不足，只有管理员或门店店长才能操作");
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean hasShopAdminRole(HttpServletRequest request) {
+        String token = getTokenFromCookie(request);
+        if (token == null) {
+            return false;
+        }
+
+        if (!JwtUtil.validateToken(token)) {
+            return false;
+        }
+
+        List<String> roleCodes = JwtUtil.getRoleCodesFromToken(token);
+        return roleCodes != null && roleCodes.contains("SHOP_ADMIN");
+    }
+
+    @Override
+    public boolean hasShopRole(HttpServletRequest request) {
+        String token = getTokenFromCookie(request);
+        if (token == null) {
+            return false;
+        }
+
+        if (!JwtUtil.validateToken(token)) {
+            return false;
+        }
+
+        List<String> roleCodes = JwtUtil.getRoleCodesFromToken(token);
+        return roleCodes != null && (roleCodes.contains("SHOP_ADMIN") || roleCodes.contains("SHOP_STAFF"));
+    }
+
+    @Override
+    public String getUserIdFromRequest(HttpServletRequest request) {
+        return (String) request.getAttribute("userId");
+    }
+
+    @Override
+    public String getShopIdFromRequest(HttpServletRequest request) {
+        String token = getTokenFromCookie(request);
+        if (token == null) {
+            return null;
+        }
+        if (!JwtUtil.validateToken(token)) {
+            return null;
+        }
+        return JwtUtil.getShopIdFromToken(token);
+    }
+
     private String getTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

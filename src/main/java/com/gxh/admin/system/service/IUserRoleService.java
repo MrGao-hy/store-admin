@@ -25,4 +25,14 @@ public interface IUserRoleService extends IService<UserRole> {
 
     Result<Void> checkAdminPermission(HttpServletRequest request);
 
+    Result<Void> checkShopAdminPermission(HttpServletRequest request);
+
+    boolean hasShopAdminRole(HttpServletRequest request);
+
+    boolean hasShopRole(HttpServletRequest request);
+
+    String getUserIdFromRequest(HttpServletRequest request);
+
+    String getShopIdFromRequest(HttpServletRequest request);
+
 }

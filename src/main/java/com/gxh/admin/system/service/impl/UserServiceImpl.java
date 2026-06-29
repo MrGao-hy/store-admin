@@ -12,9 +12,11 @@ import com.gxh.admin.system.dto.UserStatusDTO;
 import com.gxh.admin.system.entity.Role;
 import com.gxh.admin.system.entity.User;
 import com.gxh.admin.system.entity.UserRole;
+import com.gxh.admin.system.entity.UserShop;
 import com.gxh.admin.system.mapper.RoleMapper;
 import com.gxh.admin.system.mapper.UserMapper;
 import com.gxh.admin.system.mapper.UserRoleMapper;
+import com.gxh.admin.system.mapper.UserShopMapper;
 import com.gxh.admin.system.service.IRoleService;
 import com.gxh.admin.system.service.IUserRoleService;
 import com.gxh.admin.system.service.IUserService;
@@ -56,6 +58,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private IUserRoleService userRoleService;
     @Autowired
     private IRoleService roleService;
+    @Autowired
+    private UserShopMapper userShopMapper;
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -124,7 +128,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     .collect(Collectors.toList());
         }
 
-        String token = JwtUtil.generateToken(user.getId(), roleCodes);
+        LambdaQueryWrapper<UserShop> shopWrapper = Wrappers.lambdaQuery();
+        shopWrapper.eq(UserShop::getUserId, user.getId());
+        UserShop userShop = userShopMapper.selectOne(shopWrapper);
+
+        String shopId = null;
+        if (userShop != null) {
+            shopId = userShop.getShopId();
+        }
+
+        String token = JwtUtil.generateToken(user.getId(), roleCodes, shopId);
 
         // 将token存入cookie
         Cookie cookie = new Cookie("token", token);
@@ -169,6 +182,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 构建查询条件
         LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
         wrapper.like(StringUtils.hasText(queryDTO.getUsername()), User::getUsername, queryDTO.getUsername());
+        wrapper.like(StringUtils.hasText(queryDTO.getPhone()), User::getPhone, queryDTO.getPhone());
         if (queryDTO.getStatus() != null) {
             wrapper.eq(User::getStatus, queryDTO.getStatus());
         }
@@ -191,7 +205,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result<String> setUserStatus(UserStatusDTO userStatusDTO, HttpServletRequest request) {
         // 验证ADMIN权限
-        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
+        Result<Void> checkResult = userRoleService.checkShopAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
@@ -226,6 +240,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
 
         return Result.success("设置用户角色成功");
+    }
+
+    @Override
+    public Result<IPage<User>> getShopEmployeeList(UserQueryDTO queryDTO, HttpServletRequest request) {
+        String shopId = userRoleService.getShopIdFromRequest(request);
+        if (shopId == null || shopId.isEmpty()) {
+            return Result.fail("门店ID不存在，请检查是否绑定门店");
+        }
+
+        LambdaQueryWrapper<UserShop> userShopWrapper = Wrappers.lambdaQuery();
+        userShopWrapper.eq(UserShop::getShopId, shopId);
+        List<UserShop> userShopList = userShopMapper.selectList(userShopWrapper);
+
+        if (userShopList.isEmpty()) {
+            IPage<User> emptyPage = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
+            return Result.success(emptyPage, "暂无员工");
+        }
+
+        List<String> userIds = userShopList.stream()
+                .map(UserShop::getUserId)
+                .collect(Collectors.toList());
+
+        LambdaQueryWrapper<User> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(User::getId, userIds);
+        wrapper.like(StringUtils.hasText(queryDTO.getUsername()), User::getUsername, queryDTO.getUsername());
+        wrapper.like(StringUtils.hasText(queryDTO.getPhone()), User::getPhone, queryDTO.getPhone());
+        if (queryDTO.getStatus() != null) {
+            wrapper.eq(User::getStatus, queryDTO.getStatus());
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+
+        IPage<User> userList = new Page<>(queryDTO.getCurrent(), queryDTO.getSize());
+        IPage<User> userPage = page(userList, wrapper);
+
+        for (User user : userPage.getRecords()) {
+            List<Role> roles = roleService.getUserRoles(user.getId());
+            user.setRoles(roles);
+        }
+
+        return Result.success(userPage, "获取员工列表成功");
     }
 
     public Boolean isExistUser(String id) {
