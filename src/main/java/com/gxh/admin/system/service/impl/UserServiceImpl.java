@@ -165,7 +165,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         // 调用getRoleIdsByUserId获取角色ID数组
 
-        List<Role> roles =  roleService.getUserRoles(user.getId());
+        List<Role> roles = roleService.getUserRoles(user.getId());
         user.setRoles(roles);
 
         return Result.success(user, "获取用户信息成功");
@@ -195,7 +195,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 循环用户列表，查询每个用户的角色列表
         for (User user : userPage.getRecords()) {
             // 调用getRoleIdsByUserId获取角色ID数组
-            List<Role> roles =  roleService.getUserRoles(user.getId());
+            List<Role> roles = roleService.getUserRoles(user.getId());
             user.setRoles(roles);
         }
 
@@ -280,6 +280,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
 
         return Result.success(userPage, "获取员工列表成功");
+    }
+
+    @Override
+    public Result<String> updateUser(User user) {
+
+        if (user.getId() == null || user.getId().isEmpty()) {
+            return Result.fail("用户ID不能为空");
+        }
+
+        boolean isExist = isExistUser(user.getId());
+        if (!isExist) {
+            return Result.fail("用户不存在");
+        }
+        updateById(user);
+
+        return Result.success("编辑用户成功");
     }
 
     public Boolean isExistUser(String id) {

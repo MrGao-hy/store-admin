@@ -26,7 +26,7 @@ public interface IUserService extends IService<User> {
 
     Result<User> loginService(LoginRequest loginRequest, HttpServletResponse response);
 
-    Result<User> getUserInfo(String userId,  HttpServletRequest request);
+    Result<User> getUserInfo(String userId, HttpServletRequest request);
 
     Result<IPage<User>> getUserList(UserQueryDTO queryDTO, HttpServletRequest request);
 
@@ -35,5 +35,7 @@ public interface IUserService extends IService<User> {
     Result<String> setUserRole(UserRole userRole, HttpServletRequest request);
 
     Result<IPage<User>> getShopEmployeeList(UserQueryDTO queryDTO, HttpServletRequest request);
+
+    Result<String> updateUser(User user);
 
 }
