@@ -53,6 +53,10 @@ public class JwtInterceptor implements HandlerInterceptor {
         List<String> roleCodes = JwtUtil.getRoleCodesFromToken(token);
         request.setAttribute("roleCodes", roleCodes);
 
+
+        String shopId = JwtUtil.getShopIdFromToken(token);
+        request.setAttribute("shopId", shopId);
+
         return true;
     }
 }
