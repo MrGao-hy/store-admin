@@ -57,7 +57,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements IM
 
         for (Menu menu : allMenus) {
             String name = menu.getName();
-            if (name != null && (name.contains("员工") || name.contains("商品") || name.contains("订单"))) {
+            if (menu.getPermission() != null && !menu.getPermission().isEmpty()) {
                 allowedMenuIds.add(menu.getId());
                 String parentId = menu.getParentId();
                 while (parentId != null && !parentId.isEmpty()) {
