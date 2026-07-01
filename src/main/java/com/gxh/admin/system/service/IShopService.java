@@ -2,6 +2,7 @@ package com.gxh.admin.system.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Shop;
 import com.gxh.admin.system.entity.User;
 
@@ -33,7 +34,7 @@ public interface IShopService extends IService<Shop> {
 
     Result<IPage<User>> getShopEmployeeList(String shopId, HttpServletRequest request);
 
-    Result<String> updateShopStatus(String id, Boolean status, HttpServletRequest request);
+    Result<String> updateShopStatus(StatusDTO statusDTO, HttpServletRequest request);
 
     Result<List<ShopOptionsVo>> getSimpleShopList(String name);
 

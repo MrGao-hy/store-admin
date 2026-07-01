@@ -3,8 +3,8 @@ package com.gxh.admin.system.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.LoginRequest;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.dto.UserQueryDTO;
-import com.gxh.admin.system.dto.UserStatusDTO;
 import com.gxh.admin.system.entity.User;
 import com.gxh.admin.system.entity.UserRole;
 import com.gxh.admin.system.service.IUserService;
@@ -43,9 +43,6 @@ public class UserController {
     @GetMapping("detail/{id}")
     public Result<User> getUserInfo(@PathVariable String id, HttpServletRequest request) {
         String token = getTokenFromCookie(request);
-        if (!JwtUtil.validateToken(token)) {
-            return Result.fail("登录已失效，请重新登录");
-        }
 
         String realId = (id == null || "undefined".equals(id)) ? null : id;
 
@@ -74,8 +71,8 @@ public class UserController {
 
     @ApiOperation("设置用户状态")
     @PostMapping("update/status")
-    public Result<String> setUserStatus(@RequestBody UserStatusDTO userStatusDTO, HttpServletRequest request) {
-        return userService.setUserStatus(userStatusDTO, request);
+    public Result<String> setUserStatus(@RequestBody StatusDTO statusDTO, HttpServletRequest request) {
+        return userService.setUserStatus(statusDTO, request);
     }
 
     @ApiOperation("设置用户角色")

@@ -9,10 +9,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-@ApiModel("修改用户状态请求")
-public class UserStatusDTO {
+@ApiModel("修改状态请求")
+public class StatusDTO {
+
     @ApiModelProperty("用户ID")
-    private String userId;
+    private String id;
+
     @ApiModelProperty("状态：1正常 0禁用")
     @JsonSerialize(using = ByteToBooleanSerializer.class)
     @JsonDeserialize(using = BooleanToByteDeserializer.class)

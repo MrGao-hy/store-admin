@@ -3,6 +3,7 @@ package com.gxh.admin.system.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.BrandQueryDTO;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Brand;
 import com.gxh.admin.system.service.IBrandService;
 import io.swagger.annotations.Api;
@@ -53,9 +54,9 @@ public class BrandController {
 
     @ApiOperation("修改品牌状态（管理员）")
     @PostMapping("status/update")
-    public Result<String> updateBrandStatus(@RequestParam String id, @RequestParam Boolean status,
-            HttpServletRequest request) {
-        return brandService.updateBrandStatus(id, status, request);
+    public Result<String> updateBrandStatus(@RequestBody StatusDTO statusDTO,
+                                            HttpServletRequest request) {
+        return brandService.updateBrandStatus(statusDTO, request);
     }
 
     @ApiOperation("获取品牌详情")

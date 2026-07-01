@@ -3,6 +3,7 @@ package com.gxh.admin.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.BrandQueryDTO;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Brand;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -29,7 +30,7 @@ public interface IBrandService extends IService<Brand> {
 
     Result<List<Brand>> getBrandOptions(HttpServletRequest request);
 
-    Result<String> updateBrandStatus(String id, Boolean status, HttpServletRequest request);
+    Result<String> updateBrandStatus(StatusDTO statusDTO, HttpServletRequest request);
 
     Result<Brand> getBrandDetail(String id, HttpServletRequest request);
 

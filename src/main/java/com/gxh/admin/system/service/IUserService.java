@@ -3,8 +3,8 @@ package com.gxh.admin.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.LoginRequest;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.dto.UserQueryDTO;
-import com.gxh.admin.system.dto.UserStatusDTO;
 import com.gxh.admin.system.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gxh.admin.system.entity.UserRole;
@@ -30,7 +30,7 @@ public interface IUserService extends IService<User> {
 
     Result<IPage<User>> getUserList(UserQueryDTO queryDTO, HttpServletRequest request);
 
-    Result<String> setUserStatus(UserStatusDTO userStatusDTO, HttpServletRequest request);
+    Result<String> setUserStatus(StatusDTO statusDTO, HttpServletRequest request);
 
     Result<String> setUserRole(UserRole userRole, HttpServletRequest request);
 

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.BrandQueryDTO;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Brand;
 import com.gxh.admin.system.mapper.BrandMapper;
 import com.gxh.admin.system.service.IBrandService;
@@ -121,20 +122,20 @@ public class BrandServiceImpl extends ServiceImpl<BrandMapper, Brand> implements
     }
 
     @Override
-    public Result<String> updateBrandStatus(String id, Boolean status, HttpServletRequest request) {
+    public Result<String> updateBrandStatus(StatusDTO statusDTO, HttpServletRequest request) {
         Result<Void> checkResult = userRoleService.checkAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
 
-        Brand brand = getById(id);
+        Brand brand = getById(statusDTO.getId());
         if (brand == null) {
             return Result.fail("品牌不存在");
         }
 
         LambdaUpdateWrapper<Brand> wrapper = Wrappers.lambdaUpdate();
-        wrapper.eq(Brand::getId, id);
-        wrapper.set(Brand::getStatus, status);
+        wrapper.eq(Brand::getId, statusDTO.getId());
+        wrapper.set(Brand::getStatus, statusDTO.getStatus());
 
         update(wrapper);
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Role;
 import com.gxh.admin.system.entity.Shop;
 import com.gxh.admin.system.entity.User;
@@ -196,19 +197,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     @Override
-    public Result<String> updateShopStatus(String id, Boolean status, HttpServletRequest request) {
+    public Result<String> updateShopStatus(StatusDTO statusDTO, HttpServletRequest request) {
         Result<Void> checkResult = userRoleService.checkAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
 
-        Shop shop = getById(id);
+        Shop shop = getById(statusDTO.getId());
         if (shop == null) {
             return Result.fail("门店不存在");
         }
 
-        shop.setStatus(status ? (byte) 1 : (byte) 0);
-        shop.setUpdateTime(LocalDateTime.now());
+        shop.setStatus(statusDTO.getStatus());
         updateById(shop);
 
         return Result.success("更新门店状态成功");

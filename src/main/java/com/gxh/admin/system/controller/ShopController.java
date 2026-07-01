@@ -2,6 +2,7 @@ package com.gxh.admin.system.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gxh.admin.common.Result;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.entity.Shop;
 import com.gxh.admin.system.entity.User;
 
@@ -66,10 +67,9 @@ public class ShopController {
     @ApiOperation("更新门店状态（管理员）")
     @PostMapping("status/update")
     public Result<String> updateShopStatus(
-            @RequestParam String id,
-            @RequestParam Boolean status,
+            @RequestBody StatusDTO statusDTO,
             HttpServletRequest request) {
-        return shopService.updateShopStatus(id, status, request);
+        return shopService.updateShopStatus(statusDTO, request);
     }
 
     @ApiOperation("获取选择门店")
