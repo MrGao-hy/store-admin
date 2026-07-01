@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.gxh.admin.util.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author gaoxianhua
  * @since 2026-06-18
  */
+@Slf4j
 @Service
 public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> implements IUserRoleService {
     @Autowired
@@ -162,14 +164,8 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> i
 
     @Override
     public String getShopIdFromRequest(HttpServletRequest request) {
-        String token = getTokenFromCookie(request);
-        if (token == null) {
-            return null;
-        }
-        if (!JwtUtil.validateToken(token)) {
-            return null;
-        }
-        return JwtUtil.getShopIdFromToken(token);
+        log.info("shopId: {}", request.getAttribute("userId"));
+        return (String) request.getAttribute("shopId");
     }
 
     private String getTokenFromCookie(HttpServletRequest request) {
