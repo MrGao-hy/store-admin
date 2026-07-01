@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gxh.admin.system.mapper.GoodsMapper">
+    <select id="selectGoodsShopPage" resultType="com.gxh.admin.system.entity.Goods">
+        SELECT
+            g.id,
+            g.goods_name,
+            g.goods_sn,
+            g.category,
+            g.brand_id,
+            g.spec_info,
+            g.cover_img,
+            g.sort,
+            g.create_time,
+            g.update_time,
+            IFNULL(gs.shop_sale_price, 0) AS shop_sale_price,
+            IFNULL(gs.shop_stock, 0) AS shop_stock,
+            IFNULL(gs.is_shop_shelf, 0) AS is_shop_shelf
+        FROM sys_goods g
+        <!-- 全查所有商品：左连接；仅查门店商品：内连接 -->
+        <choose>
+            <when test="query.queryAllShop == true">
+                LEFT JOIN sys_goods_shop gs
+                    ON g.id = gs.goods_id
+                    AND gs.shop_id = #{query.shopId}
+            </when>
+            <otherwise>
+                INNER JOIN sys_goods_shop gs
+                    ON g.id = gs.goods_id
+                    AND gs.shop_id = #{query.shopId}
+            </otherwise>
+        </choose>
+
+        <where>
+            <if test="query.goodsName != null and query.goodsName != ''">
+                AND g.goods_name LIKE CONCAT('%', #{query.goodsName}, '%')
+            </if>
+            <if test="query.brandId != null and query.brandId != ''">
+                AND g.brand_id = #{query.brandId}
+            </if>
+            <!-- 上架状态筛选，仅对门店已有数据生效 -->
+            <if test="query.isShopShelf != null">
+                AND gs.is_shop_shelf = #{query.isShopShelf}
+            </if>
+        </where>
+        ORDER BY g.create_time DESC
+    </select>
+
+</mapper>
