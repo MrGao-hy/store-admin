@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gxh.admin.common.Result;
 import com.gxh.admin.system.dto.LoginRequest;
+import com.gxh.admin.system.dto.StatusDTO;
 import com.gxh.admin.system.dto.UserQueryDTO;
-import com.gxh.admin.system.dto.UserStatusDTO;
 import com.gxh.admin.system.entity.Role;
 import com.gxh.admin.system.entity.User;
 import com.gxh.admin.system.entity.UserRole;
@@ -151,11 +151,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public Result<User> getUserInfo(String userId, HttpServletRequest request) {
-        // 验证ADMIN权限
-        Result<Void> checkResult = userRoleService.checkAdminPermission(request);
-        if (checkResult != null) {
-            return Result.fail(checkResult.getMessage());
-        }
 
         User user = getById(userId);
 
@@ -203,22 +198,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public Result<String> setUserStatus(UserStatusDTO userStatusDTO, HttpServletRequest request) {
+    public Result<String> setUserStatus(StatusDTO statusDTO, HttpServletRequest request) {
         // 验证ADMIN权限
         Result<Void> checkResult = userRoleService.checkShopAdminPermission(request);
         if (checkResult != null) {
             return Result.fail(checkResult.getMessage());
         }
         // 验证用户id是否存在
-        boolean isExist = isExistUser(userStatusDTO.getUserId());
+        boolean isExist = isExistUser(statusDTO.getId());
         if (!isExist) return Result.fail("用户不存在");
 
         LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate();
-        wrapper.eq(User::getId, userStatusDTO.getUserId());
-        wrapper.set(User::getStatus, userStatusDTO.getStatus());
+        wrapper.eq(User::getId, statusDTO.getId());
+        wrapper.set(User::getStatus, statusDTO.getStatus());
         update(wrapper);
 
-        return Result.success(userStatusDTO.getStatus() == 1 ? "启用用户成功" : "禁用用户成功");
+        return Result.success(statusDTO.getStatus() == 1 ? "启用用户成功" : "禁用用户成功");
     }
 
     @Override
